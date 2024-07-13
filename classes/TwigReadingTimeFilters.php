@@ -91,7 +91,7 @@ class TwigReadingTimeFilters extends Twig_Extension
 
     $minutes_long_count = number_format($minutes_short_count, 2);
     $seconds_long_count = number_format($seconds_short_count, 2);
-    
+
     if (array_key_exists('minute_label', $options) and $minutes_short_count == 1) {
       $minutes_text = $options['minute_label'];
     } elseif (array_key_exists('minutes_label', $options) and $minutes_short_count > 1) {
@@ -108,13 +108,17 @@ class TwigReadingTimeFilters extends Twig_Extension
       $seconds_text = $language->translate(( $seconds_short_count == 1 ) ? 'PLUGIN_READINGTIME.SECOND' : 'PLUGIN_READINGTIME.SECONDS');
     }
 
+    // Adding translation for reading_label
+    $reading_label = $language->translate('PLUGIN_READINGTIME.READING_LABEL');
+
     $replace = [
       'minutes_short_count'   => $minutes_short_count,
       'seconds_short_count'   => $seconds_short_count,
       'minutes_long_count'    => $minutes_long_count,
       'seconds_long_count'    => $seconds_long_count,
       'minutes_text'          => $minutes_text,
-      'seconds_text'          => $seconds_text
+      'seconds_text'          => $seconds_text,
+      'reading_label'         => $reading_label
     ];
 
     $result = $options['format'];
