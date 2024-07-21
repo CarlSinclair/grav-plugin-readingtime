@@ -2,7 +2,7 @@
 
 **<sup>Better</sup>ReadingTime** is a [Grav](http://github.com/getgrav/grav) plugin which allows Grav to display the reading time of a page's content. This is especially useful for blogs and other sites as it gives the reader a quick idea of how much time they will need to set aside to read the page in full.
 
-***This fork differs from the original in two main ways:***
+***This fork differs from the original in three main ways:***
 1. ***Reading label is translated, not just "minutes" and "seconds".***
 2. ***Reading time (and label) is cached, in translated form, in the page headers of every page. This negates the need to run the calculation on every page load if reading time is present in the frontmatter.***
 3. ***Disabled seconds. Reading time is rounded to the nearest minute for a cleaner view.***
