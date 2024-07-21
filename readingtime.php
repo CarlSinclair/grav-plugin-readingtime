@@ -1,49 +1,65 @@
 <?php
-
 namespace Grav\Plugin;
 
-use Composer\Autoload\ClassLoader;
 use Grav\Common\Plugin;
-use Grav\Plugin\ReadingTime\TwigReadingTimeFilters;
+use RocketTheme\Toolbox\Event\Event;
 
 class ReadingTimePlugin extends Plugin
 {
     public static function getSubscribedEvents()
     {
         return [
-            'onPluginsInitialized' => [
-                ['autoload', 100000],
-                ['onPluginsInitialized', 0]
-            ]
+            'onPageContentProcessed' => ['onPageContentProcessed', 0]
         ];
     }
 
-    /**
-     * [onPluginsInitialized:100000] Composer autoload.
-     *
-     * @return ClassLoader
-     */
-    public function autoload()
+    public function onPageContentProcessed(Event $event)
     {
-        return require __DIR__ . '/vendor/autoload.php';
+        $page = $event['page'];
+        $cacheKey = 'readingtime-' . $page->id();
+
+        $readingTime = $this->grav['cache']->fetch($cacheKey);
+
+        if ($readingTime === false) {
+            $content = $page->content();
+            $readingTime = $this->calculateReadingTime($content);
+            $this->grav['cache']->save($cacheKey, $readingTime);
+        } 
+
+        $this->modifyHeader($page, $readingTime);
     }
 
-    public function onPluginsInitialized()
+    private function modifyHeader($page, $readingTime)
     {
-        if ($this->isAdmin()) {
-            $this->active = false;
-            return;
-        }
+        $header = $page->header();
+        if (isset($header)) {
+            // --- Translate Reading Time (without seconds) ---
+            $language = $this->grav['language'];
+            $options = array_merge($this->grav['config']->get('plugins.readingtime'), []); 
+            $minutes_short_count = $readingTime;
 
-        $this->enable([
-            'onTwigExtensions' => [
-                ['onTwigExtensions', 0]
-            ]
-        ]);
+            $minutes_text = ($minutes_short_count == 1) ? 
+                $language->translate('PLUGIN_READINGTIME.MINUTE') : 
+                $language->translate('PLUGIN_READINGTIME.MINUTES');
+
+            $readingTimeString = sprintf(
+                '%s: %s %s', 
+                $language->translate('PLUGIN_READINGTIME.READING_LABEL'),
+                $minutes_short_count,
+                $minutes_text
+            );
+
+            $header->readingTime = $readingTimeString;
+            $page->rawRoute($page->route(), $header); 
+        } 
     }
 
-    public function onTwigExtensions()
+    private function calculateReadingTime($text)
     {
-        $this->grav['twig']->twig->addExtension(new TwigReadingTimeFilters());
+        $wordCount = str_word_count(strip_tags($text));
+        $wordsPerMinute = 200;
+        $readingTime = ceil($wordCount / $wordsPerMinute);
+
+        return $readingTime;
     }
 }
