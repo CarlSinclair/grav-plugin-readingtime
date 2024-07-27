@@ -18,13 +18,13 @@ class ReadingTimePlugin extends Plugin
         $page = $event['page'];
         $cacheKey = 'readingtime-' . $page->id();
 
+        // Ensure synchronous cache access
         $readingTime = $this->grav['cache']->fetch($cacheKey);
-
         if ($readingTime === false) {
             $content = $page->content();
             $readingTime = $this->calculateReadingTime($content);
             $this->grav['cache']->save($cacheKey, $readingTime);
-        } 
+        }
 
         $this->modifyHeader($page, $readingTime);
     }
@@ -32,26 +32,21 @@ class ReadingTimePlugin extends Plugin
     private function modifyHeader($page, $readingTime)
     {
         $header = $page->header();
-        if (isset($header)) {
-            // --- Translate Reading Time (without seconds) ---
-            $language = $this->grav['language'];
-            $options = array_merge($this->grav['config']->get('plugins.readingtime'), []); 
-            $minutes_short_count = $readingTime;
 
-            $minutes_text = ($minutes_short_count == 1) ? 
-                $language->translate('PLUGIN_READINGTIME.MINUTE') : 
-                $language->translate('PLUGIN_READINGTIME.MINUTES');
+        $minutes_short_count = $readingTime;
+        $minutes_text = ($minutes_short_count == 1) ?
+            $this->grav['language']->translate('PLUGIN_READINGTIME.MINUTE') :
+            $this->grav['language']->translate('PLUGIN_READINGTIME.MINUTES');
 
-            $readingTimeString = sprintf(
-                '%s: %s %s', 
-                $language->translate('PLUGIN_READINGTIME.READING_LABEL'),
-                $minutes_short_count,
-                $minutes_text
-            );
+        $readingTimeString = sprintf(
+            '%s: %s %s',
+            $this->grav['language']->translate('PLUGIN_READINGTIME.READING_LABEL'),
+            $minutes_short_count,
+            $minutes_text
+        );
 
-            $header->readingTime = $readingTimeString;
-            $page->rawRoute($page->route(), $header); 
-        } 
+        $header->readingTime = $readingTimeString;
+        $page->header($header);
     }
 
     private function calculateReadingTime($text)
